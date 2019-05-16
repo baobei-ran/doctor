@@ -1,0 +1,469 @@
+<!--SetTime 时段设置-->
+<template>
+  <div id="SetTime">
+    <div class="tips_msg"
+         v-html="TipsMsg"
+    ></div>
+    <div class="select_table">
+      <div class="select_box">
+        <table border="0" cellpadding="0" cellspacing="0">
+          <thead>
+          <tr>
+            <th></th>
+            <th
+              v-for="(item,$index) in Time"
+              v-bind:id="item.id"
+            >
+              {{item.week}}
+              {{item.date}}
+            </th>
+          </tr>
+          </thead>
+          <tbody id="App">
+          <tr id="am">
+            <td>上午</td>
+            <td
+              v-for="(item,$index) in Time"
+              @click="SetActive($event)"
+              :data-time="item.time"
+              data-type="1"
+              :data-week="item.week"
+              :data-date="item.date"
+            ></td>
+          </tr>
+          <tr id="pm">
+            <td>下午</td>
+            <td
+              v-for="(item,$index) in Time"
+              @click="SetActive($event)"
+              :data-time="item.time"
+              data-type="2"
+              :data-week="item.week"
+              :data-date="item.date"
+            ></td>
+          </tr>
+          <tr id="ng">
+            <td>夜间</td>
+            <td
+              v-for="(item,$index) in Time"
+              @click="SetActive($event)"
+              :data-time="item.time"
+              data-type="3"
+              :data-week="item.week"
+              :data-date="item.date"
+            ></td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="spacing"></div>
+    <div class="form_box">
+      <div class="my_group">
+        <p class="group_title">门诊类型</p>
+        <div class="radio_box">
+          <p>
+            <label
+              for="type1"
+              :class="{active:ActiveClass}"
+            >普通</label>
+            <input type="radio" name="type" value="1" id="type1" v-model="Type">
+          </p>
+          <p>
+            <label
+              for="type2"
+              :class="{active:!ActiveClass}"
+            >专家</label>
+            <input type="radio" name="type" value="2" id="type2" v-model="Type">
+          </p>
+        </div>
+      </div>
+      <div class="my_group">
+        <p class="group_title">门诊地点</p>
+        <div
+          class="Ft-S28 Color_gray"
+        >{{ Address }}</div>
+      </div>
+      <div class="my_group">
+        <p class="group_title">挂号费用</p>
+        <input
+          type="number"
+          placeholder="输入单次挂号价格（元）"
+          v-model="Money"
+        >
+      </div>
+      <div class="my_group">
+        <p class="group_title">预约人数</p>
+        <input
+          type="number"
+          placeholder="输入可预约人数（人）"
+          v-model="PeopleCount"
+        >
+      </div>
+    </div>
+    <div class="sub_btn"
+         @click="SubBtn"
+    >保存设置
+    </div>
+  </div>
+</template>
+
+<script>
+  import {Toast, Indicator} from 'mint-ui';
+  export default {
+    name: "SetTime",
+    data() {
+      return {
+        TipsMsg: '提示：可多选批量设定，每周日开启下一时间段预约',
+        Time: null,
+        TimeInterval: ['上午', '下午', '晚上'],
+        Type: 1,//门诊类型 1：普通 2：专家
+        Address: '',//门诊地点
+        Money: "",//挂号费用
+        PeopleCount: "",//预约人数
+        ActiveClass: true,//普通和专家切换使用的class
+        ResData: null,//请求接口返回的数据
+        Number: 1,//状态切换数字
+      }
+    },
+    mounted: function () {
+      this.GetList();
+    },
+    updated: function () {
+      var that = this;
+      var Time = that.ResData.data.time;
+      var TimeClose = that.ResData.time_close;
+      //已设定
+      $.each(Time, function (i, v) {
+        var d = new Date(v.days * 1000);
+        var tMonth = d.getMonth();
+        var tDate = d.getDate();
+        tMonth = DoHandleMonth(tMonth + 1);
+        tDate = DoHandleMonth(tDate);
+        var id = tMonth + "-" + tDate;
+        var index = $("#" + id).index();
+        if (v.reg_time1) {
+          //上午
+          $("#am>td").eq(index).addClass("ysz");
+        } else if (v.reg_time2) {
+          //下午
+          $("#pm>td").eq(index).addClass("ysz");
+        } else {
+          //晚上
+          $("#ng>td").eq(index).addClass("ysz");
+        }
+      });
+      //已停诊
+      $.each(TimeClose, function (i, v) {
+        var d = new Date(v.close_days * 1000);
+        var tMonth = d.getMonth();
+        var tDate = d.getDate();
+        tMonth = DoHandleMonth(tMonth + 1);
+        tDate = DoHandleMonth(tDate);
+        var id = tMonth + "-" + tDate;
+        var index = $("#" + id).index();
+        if (v.close_reg_time1) {
+          //上午
+          $("#am>td").eq(index).addClass("ytz");
+        } else if (v.close_reg_time2) {
+          //下午
+          $("#pm>td").eq(index).addClass("ytz");
+        } else {
+          //晚上
+          $("#ng>td").eq(index).addClass("ytz");
+        }
+      })
+    },
+    methods: {
+      GetList:function(){
+        var that = this;
+        var SelectDate = [];
+        var AllDays = 0;
+        this.$http.post("mobile/doch5/get_time", {'did': this.$route.params.did})
+          .then(function (res) {
+            console.log(res.data)
+            if (res.status >= 200 && res.status < 300) {
+              if (res.data.code == 1) {
+              
+                that.ResData = res.data;
+                that.Address=res.data.data.address;
+                AllDays = res.data.alldays;
+                // AllDays = 7;
+                //获取日期
+                for (var i = 0; i < AllDays; i++) {
+                  (function (n) {
+                    SelectDate.push(GetDateTime(n))
+                  })(i)
+                }
+                that.Time = SelectDate;
+              } else  {
+
+              }
+            }
+          })
+          .catch(function (err) {
+            console.log(err)
+          })
+      },
+      //提交表单
+      SubBtn: function () {
+        var isNum = /^[0-9]+\.?[0-9]*$/;
+        var isPrice = /(^[1-9]([0-9]+)?(\.[0-9]{1,2})?$)|(^(0){1}$)|(^[0-9]\.[0-9]([0-9])?$)/;
+        var that=this;
+        var RequestData = [];
+        var obj = {
+          did: this.$route.params.did,
+          type: this.Type,
+          money: Number(this.Money).toFixed(2),
+          num: this.PeopleCount,
+          data: RequestData,
+        }
+        $.each($("#App td.active"), function (i, v) {
+          var $this = $(v);
+          var dataObj = {};
+          var dataType = $this.attr("data-type");
+          var dataTime = $this.attr("data-time");
+          dataObj.time = dataTime;
+          dataObj.time_type = dataType;
+          RequestData.push(dataObj);
+        });
+        if (RequestData.length == 0) {
+          Toast({
+            message: '请选择时间段！',
+            position: 'middle',
+            duration: 2000
+          });
+          return false
+        } else if (this.Money <= 0 && !isPrice.test(this.Money)) {
+          Toast({
+            message: '请输入正确挂号费用！',
+            position: 'middle',
+            duration: 2000
+          });
+          return false
+        } else if (this.Money == '') {
+          Toast({
+            message: '请输入挂号费用！',
+            position: 'middle',
+            duration: 2000
+          });
+        } else if (this.PeopleCount == '' && this.PeopleCount <= 0 && !isNum.test(this.PeopleCount) ) {
+          Toast({
+            message: '请输入正确预约人数！',
+            position: 'middle',
+            duration: 2000
+          });
+          return false
+        } else {
+          this.$http.post("mobile/doch5/set_time", obj)
+            .then(function (res) {
+              if (res.status >= 200 && res.status < 300) {
+                if (res.data.code == 1) {
+                  Toast({
+                    message: res.data.msg,
+                    iconClass: 'mintui mintui-success',
+                    duration: 2000
+                  });
+                  setTimeout(function(){
+                    that.GetList();
+                    that.Money='';
+                    that.PeopleCount='';
+                  }, 2000)
+                } else {
+                  Toast({
+                    message: res.data.msg,
+                    duration: 2000
+                  });
+                }
+              }
+            })
+            .catch(function (err) {
+              console.log(err)
+            })
+        }
+      },
+      //点击获取数据
+      SetActive: function (event) {
+        var $this = $(event.target);
+        var that = this;
+        if ($this.hasClass("ysz") || $this.hasClass("ytz")) {
+          return false
+        } else if ($this.hasClass("active")) {
+          $this.removeClass("active");
+        } else {
+          $this.addClass("active");
+        }
+      }
+    },
+    watch: {
+      Type: function (val, oldVal) {
+        if (val == 2) {
+          this.ActiveClass = false;
+        } else {
+          this.ActiveClass = true;
+        }
+      },
+    },
+  }
+
+  //    获取时间今后的或者之前的
+  function GetDateTime(day) {
+    var today = new Date();
+    var weekDate = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+    var targetday_milliseconds = today.getTime() + 1000 * 60 * 60 * 24 * day;
+    today.setTime(targetday_milliseconds); //注意，这行是关键代码
+    var tYear = today.getFullYear();
+    var tMonth = today.getMonth();
+    var tDate = today.getDate();
+    tMonth = DoHandleMonth(tMonth + 1);
+    tDate = DoHandleMonth(tDate);
+    return {
+      date: tMonth + "." + tDate,
+      id: tMonth + "-" + tDate,
+      week: weekDate[today.getDay()],
+      time: parseInt(targetday_milliseconds / 1000)
+    }
+  }
+
+  //    时间不足2位用0填充
+  function DoHandleMonth(month) {
+    var m = month;
+    if (month.toString().length == 1) {
+      m = "0" + month;
+    }
+    return m;
+  }
+</script>
+
+<style scoped lang="less">
+  #SetTime {
+    //警示语
+    .tips_msg {
+      height: .72rem;
+      background: rgba(255, 246, 218, 1);
+      line-height: .72rem;
+      padding: 0 .3rem;
+      font-size: .24rem;
+      font-weight: 400;
+      color: rgba(225, 166, 40, 1);
+    }
+    //选择表格
+    .select_table {
+      padding: .3rem;
+      height: 3.5rem;
+      font-size: .22rem;
+      color: #202020;
+      .select_box {
+        overflow-y: hidden;
+        table {
+          border-top: 1px solid #ebebeb;
+          width: 100%;
+          tr {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+          }
+          th,
+          td {
+            min-width: .88rem;
+            max-width: .88rem;
+            height: .72rem;
+            border-right: 1px solid #EBEBEB;
+            border-bottom: 1px solid #EBEBEB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          th:first-child,
+          td:first-child {
+            position: absolute;
+            left: 0.3rem;
+            background: #fff;
+            border-left: 1px solid #ebebeb;
+
+          }
+          td:nth-child(2),
+          th:nth-child(2) {
+            margin-left: .88rem;
+          }
+          td.active {
+            background: url("../common/img/icon/icon_active.png") no-repeat;
+            background-size: contain;
+          }
+          td.ysz {
+            background: url("../common/img/icon/icon_ysz.png") no-repeat;
+            background-size: contain;
+          }
+          td.ytz {
+            background: url("../common/img/icon/icon_ytz.png") no-repeat;
+            background-size: contain;
+          }
+        }
+      }
+    }
+    //表单
+    .form_box {
+      padding: 0 .3rem;
+      .my_group {
+        height: .9rem;
+        border-bottom: 1px solid #efefef;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        .radio_box {
+          display: flex;
+          align-items: center;
+          label {
+            width: 1.28rem;
+            height: .46rem;
+            -webkit-border-radius: 4px;
+            -moz-border-radius: 4px;
+            border-radius: 4px;
+            border: 1px solid #efefef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .28rem;
+            font-weight: 500;
+            margin-right: .2rem;
+          }
+          label.active {
+            background: #5189F6;
+            color: #FFFFFF;
+            border-color: #FFFFFF;
+          }
+          input {
+            display: none;
+          }
+        }
+        & > p {
+          font-size: .3rem;
+          color: #202020;
+          margin-right: .32rem;
+        }
+        input {
+          font-size: .28rem;
+          color: #202020;
+          width: 60%;
+        }
+      }
+    }
+    //提交按钮
+    .sub_btn {
+      width: 4.12rem;
+      height: .8rem;
+      background: #5189F6;
+      color: #fff;
+      font-size: .28rem;
+      -webkit-border-radius: .8rem;
+      -moz-border-radius: .8rem;
+      border-radius: .8rem;
+      margin: 0 auto;
+      margin-top: 2.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      letter-spacing: 2px;
+    }
+  }
+</style>
