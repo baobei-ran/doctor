@@ -15,6 +15,6 @@ Vue.filter('filterTime', function(time) {
                h = dateNumFun(date.getHours()),
                m = dateNumFun(date.getMinutes()),
                s = dateNumFun(date.getSeconds())
-    return Y+':'+M+':'+D +' '+h+':'+ m
+    return Y+'-'+M+'-'+D +' '+h+':'+ m
 })
 

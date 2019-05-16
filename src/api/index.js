@@ -1,6 +1,6 @@
 import axios from 'axios';
-var baseURL = 'http://test99.yunyikang.cn'; 
-// var baseURL = 'https://www.yunyikang.cn'; // 正式
+// var baseURL = 'http://test99.yunyikang.cn'; 
+var baseURL = 'http://www.yunyikang.cn'; // 正式
 
 let http = axios.create({
   baseURL: baseURL,

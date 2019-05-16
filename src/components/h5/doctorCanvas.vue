@@ -58,7 +58,7 @@
 </template>
 
 <script>
-import { Indicator } from 'mint-ui';
+// import { Indicator } from 'mint-ui';
 import html2canvas from 'html2canvas'
 export default {
     data () {
@@ -71,10 +71,10 @@ export default {
         }
     },
     created () {
-        Indicator.open({
-            text: '加载中...',
-            spinnerType: 'fading-circle'
-        });
+        // Indicator.open({
+        //     text: '加载中...',
+        //     spinnerType: 'fading-circle'
+        // });
         var _this = this;
         _this.$https.post('/mobile/Doch5/recipe_look', {'id': this.$route.params.did }, function (res) {
             console.log(res.data)
@@ -152,7 +152,7 @@ export default {
                 // document.getElementById('imgsss').append(img)
                 // _this.isImg = true
                 document.getElementById('canvas_box').style['background'] = '#000';
-                Indicator.close();
+                // Indicator.close();
             });
     
         }

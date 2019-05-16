@@ -5,12 +5,12 @@ const Details = r => require.ensure([], () => r(require('../components/Details')
 const SetTime = r => require.ensure([], () => r(require('../components/SetTime')), 'chunkname1');
 const Agreement = r => require.ensure([], () => r(require('../components/Agreement')), 'chunkname1');
 
-const Activity = r => require(['@/components/h5/activity'], r);  // 图片
 const Detailsa = r => require(['@/components/h5/details'], r);
 const Detail = r => require.ensure([], () => r(require('@/components/h5/detail')), 'chunkname2');
 const Download = r => require.ensure([], () => r(require('@/components/h5/canvas')), 'chunkname2');
 const DoctorDetail = r => require.ensure([], () => r(require('@/components/h5/doctordetail')), 'chunkname2');
 const DoctorDownload = r => require.ensure([], () => r(require('@/components/h5/doctorCanvas')), 'chunkname2');
+const Activity = r => require(['@/components/h5/activity'], r);  // 图片
 
 Vue.use(Router);
 

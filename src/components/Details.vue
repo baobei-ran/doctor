@@ -26,7 +26,6 @@
 </template>
 
 <script>
-import { Indicator } from 'mint-ui';
   export default {
     name: "Details",
     data() {
@@ -39,19 +38,12 @@ import { Indicator } from 'mint-ui';
         msg: ''
       }
     },
-    beforeCreate () {
-      console.log('aaa')
-      Indicator.open({
-        text: '加载中...',
-        spinnerType: 'fading-circle'
-      });
-    },
+    
     mounted: function () {
       var ResDate = this.$route.params;
       var that = this;
       this.$http.post("mobile/doch5/articledata", ResDate)
         .then(function (response) {
-          Indicator.close();
           if (response.status >= 200 && response.status < 300) {
             console.log(response);
             //请求成功，response为成功信息参数

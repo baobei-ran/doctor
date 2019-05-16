@@ -1,4 +1,4 @@
-require("babel-polyfill")
+// require("babel-polyfill")
 'use strict'
 var webpack=require('webpack')
 const path = require('path')

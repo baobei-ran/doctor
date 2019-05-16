@@ -137,7 +137,7 @@ export default {
 
             html2canvas(shareContent, opts).then(function (canvas) {
                 
-                var img = canvas.toDataURL("image/jpeg");
+                var img = canvas.toDataURL("image/png");
                 _this.imgUrl = img
                 cntElem.style['-webkit-transform'] = 'scale(0.5)'
                 document.getElementById('canvas_box').style['background'] = '#000';
