@@ -5,12 +5,13 @@ const Details = r => require.ensure([], () => r(require('../components/Details')
 const SetTime = r => require.ensure([], () => r(require('../components/SetTime')), 'chunkname1');
 const Agreement = r => require.ensure([], () => r(require('../components/Agreement')), 'chunkname1');
 
-const Detailsa = r => require(['@/components/h5/details'], r);
-const Detail = r => require.ensure([], () => r(require('@/components/h5/detail')), 'chunkname2');
-const Download = r => require.ensure([], () => r(require('@/components/h5/canvas')), 'chunkname2');
-const DoctorDetail = r => require.ensure([], () => r(require('@/components/h5/doctordetail')), 'chunkname2');
-const DoctorDownload = r => require.ensure([], () => r(require('@/components/h5/doctorCanvas')), 'chunkname2');
-const Activity = r => require(['@/components/h5/activity'], r);  // 图片
+const ShopDetails = r => require(['../components/h5/details'], r);
+const Detail = r => require.ensure([], () => r(require('../components/h5/detail')), 'chunkname2');
+const Download = r => require.ensure([], () => r(require('../components/h5/canvas')), 'chunkname2');
+const DoctorDetail = r => require.ensure([], () => r(require('../components/h5/doctordetail')), 'chunkname2');
+const DoctorDownload = r => require.ensure([], () => r(require('../components/h5/doctorCanvas')), 'chunkname2');
+
+import Activity from '../components/h5/activity';  // 图片
 
 Vue.use(Router);
 
@@ -45,7 +46,7 @@ export default new Router({
       path: '/shopdetails/:did',
       title: '详情页',
       name: 'details',
-      component: Detailsa
+      component: ShopDetails
     },
     {
       path: '/detail/:did',

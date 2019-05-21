@@ -13,7 +13,7 @@
 
 <script>
 export default {
-
+    name: 'activity'
 }
 </script>
 
@@ -22,6 +22,7 @@ export default {
     width: 100%;
     height: 100%;
     overflow-y: scroll;
+    -moz-overflow-scrolling: touch;
     -webkit-overflow-scrolling: touch;
 }
 .activity > ul {

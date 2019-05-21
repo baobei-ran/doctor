@@ -16,7 +16,7 @@
             <h4>{{ datalist.name }}</h4>
             <p><span>{{ datalist.sales_volume }}</span>人购买</p>
         </div>
-        <section class="detail_con bg_f" v-if='datalist.type == 1? true:false'>        <!--  1 药品 2 保健品 3 医疗器械 -->
+        <div class="detail_con bg_f" v-if='datalist.type == 1? true:false'>        <!--  1 药品 2 保健品 3 医疗器械 -->
             <ul>
                 <li><span>商品类型：</span><span>{{ datalist.recipe }}</span></li>
                 <li><span>商品剂型：</span><span>{{ datalist.type2 }}</span></li>
@@ -33,8 +33,8 @@
                 <li><span>批准文号：</span><span>{{ datalist.code }}</span></li>
                 <li><span>注意事项：</span><span>{{ datalist.cautions }}</span></li>
             </ul>
-        </section>
-        <section class="detail_con bg_f" v-if='datalist.type == 2?true:false'>
+        </div>
+        <div class="detail_con bg_f" v-if='datalist.type == 2?true:false'>
             <ul>
                 <li><span>保健功能：</span><span>{{ datalist.health }}</span></li>
                 <li><span>商品剂型：</span><span>{{ datalist.type2 }}</span></li>
@@ -51,8 +51,8 @@
                 <li><span>批准文号：</span><span>{{ datalist.code }}</span></li>
                 <li><span>注意事项：</span><span>{{ datalist.cautions }}</span></li>
             </ul>
-        </section>
-        <section class="detail_con bg_f" v-if='datalist.type == 3?true:false'>
+        </div>
+        <div class="detail_con bg_f" v-if='datalist.type == 3?true:false'>
             <ul>
             </ul>
             <ul>
@@ -62,7 +62,7 @@
                 <li><span>使用方法：</span><span>{{ datalist.utype }}</span></li>
                 <li><span>注意事项：</span><span>{{ datalist.cautions }}</span></li>
             </ul>
-        </section>
+        </div>
         <div class="cont_img">
             <ul>
                 <li v-for='(val,i) in imgs' :key='i' ><img :src="$https.baseURL+val.img" alt=""></li>
@@ -81,7 +81,6 @@
     </div>
 </template>
 <script>
-import Swiper from 'swiper';
 export default {
     data () {
         return {
@@ -124,7 +123,7 @@ export default {
                     _this.pics = datas.pic
                     _this.$nextTick(() => {
                         if (_this.pics.length > 1) {
-                            new Swiper ('.swiper-container', {
+                            var swipers = new Swiper ('.swiper-container', {
                                 loop: true,
                                 // autoplay: true,
                                 pagination: {

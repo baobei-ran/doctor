@@ -24,7 +24,7 @@
             <td>上午</td>
             <td
               v-for="(item,$index) in Time"
-              @click="SetActive($event)"
+              @click="SetActive($event, item.date)"
               :data-time="item.time"
               data-type="1"
               :data-week="item.week"
@@ -35,7 +35,7 @@
             <td>下午</td>
             <td
               v-for="(item,$index) in Time"
-              @click="SetActive($event)"
+              @click="SetActive($event, item.date)"
               :data-time="item.time"
               data-type="2"
               :data-week="item.week"
@@ -46,7 +46,7 @@
             <td>夜间</td>
             <td
               v-for="(item,$index) in Time"
-              @click="SetActive($event)"
+              @click="SetActive($event, item.date)"
               :data-time="item.time"
               data-type="3"
               :data-week="item.week"
@@ -109,7 +109,9 @@
 </template>
 
 <script>
-  import {Toast, Indicator} from 'mint-ui';
+import {Toast, Indicator,  MessageBox} from 'mint-ui';
+import { setTimeout } from 'timers';
+// import { constants } from 'fs';
   export default {
     name: "SetTime",
     data() {
@@ -124,6 +126,8 @@
         ActiveClass: true,//普通和专家切换使用的class
         ResData: null,//请求接口返回的数据
         Number: 1,//状态切换数字
+        pastdue: null, // 盛放过去的时间
+        RequestData:[] // 盛放点击预约的时间
       }
     },
     mounted: function () {
@@ -173,29 +177,56 @@
           $("#ng>td").eq(index).addClass("ytz");
         }
       })
+      
     },
     methods: {
-      GetList:function(){
+      isTimer (d) { // 获取当前之前过去的时间
+        var today = new Date();
+        var tMonth = today.getMonth();
+        var tDate = today.getDate();
+        tMonth = DoHandleMonth(tMonth + 1);
+        tDate = DoHandleMonth(tDate);
+        var data = tMonth + '.' + tDate;
+        var s = d
+        var a;
+        s.map((val, i) => {
+            if (data == val.date) {
+                a = i
+            }
+        })
+        
+        if (s.length > a) {
+            s.length = a
+        }
+        this.pastdue = s
+      },
+      GetList:function(){ // 获取数据
         var that = this;
-        var SelectDate = [];
+        var SelectDate = [], arr = [];
         var AllDays = 0;
         this.$http.post("mobile/doch5/get_time", {'did': this.$route.params.did})
           .then(function (res) {
-            console.log(res.data)
+            // console.log(res.data)
             if (res.status >= 200 && res.status < 300) {
               if (res.data.code == 1) {
               
                 that.ResData = res.data;
                 that.Address=res.data.data.address;
-                AllDays = res.data.alldays;
-                // AllDays = 7;
+                // AllDays = res.data.alldays;
+                AllDays = 15;
                 //获取日期
-                for (var i = 0; i < AllDays; i++) {
+                for (var i = 1; i < AllDays; i++) {
                   (function (n) {
-                    SelectDate.push(GetDateTime(n))
+                    SelectDate.push(setDate(new Date(), n))
+                    arr.push(setDate(new Date(), n))
+                    // SelectDate.push(GetDateTime(n))
+                    
                   })(i)
                 }
                 that.Time = SelectDate;
+                setTimeout(function () {
+                  that.isTimer(arr)
+                }, 100)
               } else  {
 
               }
@@ -210,14 +241,6 @@
         var isNum = /^[0-9]+\.?[0-9]*$/;
         var isPrice = /(^[1-9]([0-9]+)?(\.[0-9]{1,2})?$)|(^(0){1}$)|(^[0-9]\.[0-9]([0-9])?$)/;
         var that=this;
-        var RequestData = [];
-        var obj = {
-          did: this.$route.params.did,
-          type: this.Type,
-          money: Number(this.Money).toFixed(2),
-          num: this.PeopleCount,
-          data: RequestData,
-        }
         $.each($("#App td.active"), function (i, v) {
           var $this = $(v);
           var dataObj = {};
@@ -225,9 +248,16 @@
           var dataTime = $this.attr("data-time");
           dataObj.time = dataTime;
           dataObj.time_type = dataType;
-          RequestData.push(dataObj);
+          that.RequestData.push(dataObj);
         });
-        if (RequestData.length == 0) {
+        var obj = {
+          did: this.$route.params.did,
+          type: this.Type,
+          money: Number(this.Money).toFixed(2),
+          num: this.PeopleCount,
+          data: this.RequestData,
+        }
+        if (this.RequestData.length == 0) {
           Toast({
             message: '请选择时间段！',
             position: 'middle',
@@ -247,7 +277,14 @@
             position: 'middle',
             duration: 2000
           });
-        } else if (this.PeopleCount == '' && this.PeopleCount <= 0 && !isNum.test(this.PeopleCount) ) {
+        } else if (this.PeopleCount == '' && !isNum.test(this.PeopleCount) ) {
+          Toast({
+            message: '请输入正确预约人数！',
+            position: 'middle',
+            duration: 2000
+          });
+          return false
+        } else if (this.PeopleCount < 1) {
           Toast({
             message: '请输入正确预约人数！',
             position: 'middle',
@@ -255,43 +292,64 @@
           });
           return false
         } else {
-          this.$http.post("mobile/doch5/set_time", obj)
-            .then(function (res) {
-              if (res.status >= 200 && res.status < 300) {
-                if (res.data.code == 1) {
-                  Toast({
-                    message: res.data.msg,
-                    iconClass: 'mintui mintui-success',
-                    duration: 2000
-                  });
-                  setTimeout(function(){
-                    that.GetList();
-                    that.Money='';
-                    that.PeopleCount='';
-                  }, 2000)
-                } else {
-                  Toast({
-                    message: res.data.msg,
-                    duration: 2000
-                  });
+          
+         MessageBox.confirm('提交后将自动通知您的患者', {title:'是否确认保存设定？'}).then(action => {
+            this.$http.post("mobile/doch5/set_time", obj)
+              .then(function (res) {
+                if (res.status >= 200 && res.status < 300) {
+                  if (res.data.code == 1) {
+                    Toast({
+                      message: res.data.msg,
+                      iconClass: 'mintui mintui-success',
+                      duration: 2000
+                    });
+                    setTimeout(function(){
+                      that.GetList();
+                      that.Money='';
+                      that.PeopleCount='';
+                      that.RequestData = [];
+                      $.each($("#App td.active"), function (i, v) {
+                        var $this = $(v);
+                        if ($this.hasClass("active")) {
+                            $this.removeClass("active");
+                        }
+                      });
+                    }, 2000)
+                  } else {
+                    Toast({
+                      message: res.data.msg,
+                      duration: 2000
+                    });
+                  }
                 }
-              }
-            })
-            .catch(function (err) {
-              console.log(err)
-            })
+              })
+              .catch(function (err) {
+                console.log(err)
+              })
+            }).catch(cancel => {
+              
+            });
         }
       },
       //点击获取数据
-      SetActive: function (event) {
+      SetActive: function (event, i) {
+        var flag = true
+        this.pastdue.map(function (val) {
+          if (i == val.date) {
+            flag = false
+          }
+        })
+        
         var $this = $(event.target);
         var that = this;
-        if ($this.hasClass("ysz") || $this.hasClass("ytz")) {
-          return false
-        } else if ($this.hasClass("active")) {
-          $this.removeClass("active");
-        } else {
-          $this.addClass("active");
+        if (flag) {
+            if ($this.hasClass("ysz") || $this.hasClass("ytz")) {
+              return false
+            } else if ($this.hasClass("active")) {
+              $this.removeClass("active");
+            } else {
+              $this.addClass("active");
+            }
         }
       }
     },
@@ -306,25 +364,6 @@
     },
   }
 
-  //    获取时间今后的或者之前的
-  function GetDateTime(day) {
-    var today = new Date();
-    var weekDate = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
-    var targetday_milliseconds = today.getTime() + 1000 * 60 * 60 * 24 * day;
-    today.setTime(targetday_milliseconds); //注意，这行是关键代码
-    var tYear = today.getFullYear();
-    var tMonth = today.getMonth();
-    var tDate = today.getDate();
-    tMonth = DoHandleMonth(tMonth + 1);
-    tDate = DoHandleMonth(tDate);
-    return {
-      date: tMonth + "." + tDate,
-      id: tMonth + "-" + tDate,
-      week: weekDate[today.getDay()],
-      time: parseInt(targetday_milliseconds / 1000)
-    }
-  }
-
   //    时间不足2位用0填充
   function DoHandleMonth(month) {
     var m = month;
@@ -333,10 +372,69 @@
     }
     return m;
   }
+
+
+
+// 现在获取两周时间
+  var formatDate = function(date) {    
+        var year = date.getFullYear() 
+        var month = DoHandleMonth(date.getMonth()+1);
+        var day = DoHandleMonth(date.getDate());
+        var targetday_milliseconds = date.getTime();
+        var week = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][date.getDay()]; 
+        return {
+            date: month+'.'+day,
+            id: month+'-'+day,
+            time: parseInt(targetday_milliseconds / 1000),
+            week: week,
+        }
+      };
+
+    var addDate= function(date,n){    
+        date.setDate(date.getDate()+n);    
+        return date;
+      };
+      var setDate = function(date, n){       
+        var week = date.getDay()-1;
+        date = addDate(date,week*-1);
+        
+        for(var i = 0;i<n;i++){         
+          //  var timer = formatDate(i==0 ? date : addDate(date,1));    // 星期一开始
+           var timer = formatDate(i==0 ? addDate(date,-1) : addDate(date,1));//星期日开始
+        } 
+        return timer   
+    };
+
+//////////////////////////////////////////
+
+  // //    获取时间今后的或者之前的
+  // function GetDateTime(day) {   // 之前的获取方式，一天天往前走
+  //   var today = new Date();
+  //   var weekDate = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+  //   var targetday_milliseconds = today.getTime() + 1000 * 60 * 60 * 24 * day;
+  //   today.setTime(targetday_milliseconds); //注意，这行是关键代码
+  //   var tYear = today.getFullYear();
+  //   var tMonth = today.getMonth();
+  //   var tDate = today.getDate();
+  //   tMonth = DoHandleMonth(tMonth + 1);
+  //   tDate = DoHandleMonth(tDate);
+    
+  //   return {
+  //     date: tMonth + "." + tDate,
+  //     id: tMonth + "-" + tDate,
+  //     time: parseInt(targetday_milliseconds / 1000),
+  //     week: weekDate[today.getDay()],
+      
+  //   }
+  // }
+
+
+
 </script>
 
 <style scoped lang="less">
   #SetTime {
+    height: 100%;
     //警示语
     .tips_msg {
       height: .72rem;
@@ -353,6 +451,7 @@
       height: 3.5rem;
       font-size: .22rem;
       color: #202020;
+      background-color: #fff;
       .select_box {
         overflow-y: hidden;
         table {
@@ -399,7 +498,11 @@
             background-size: contain;
           }
         }
+        
       }
+      .select_box::-webkit-scrollbar {
+            display: none;
+        }
     }
     //表单
     .form_box {

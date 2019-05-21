@@ -1,5 +1,6 @@
 <template>
     <div id='canvas_box'>
+        <div :class="{'image': isImg }" id='imgsss'>
         <div class='html_content' ref='html_content' id='html'>
             <div class="canvas_head">
                 <ul>
@@ -51,7 +52,7 @@
                 </ul>
             </div>
         </div>
-        
+        </div>
         <div class="btn">
             <button @click='giveAndroid'>下载处方</button>
         </div>
@@ -69,13 +70,18 @@ export default {
             durg: [],
             ti: '',
             imgUrl: '',
-
+            isImg: false
         }
+    },
+    beforeCreate () {
+        Indicator.open({
+            spinnerType: 'fading-circle'
+        });
     },
  mounted () {
     var _this = this;
     _this.$https.post('/mobile/doch5/user_recipe_detail', {'id': this.$route.params.did }, function (res) {
-        // console.log(res.data)
+        console.log(res.data)
         if (res.data.code == 1) {
             _this.canvasdata = res.data.data
             _this.durg = res.data.drug
@@ -88,16 +94,14 @@ export default {
                 }
                 
             })
+            setTimeout(() => {
+                _this.canvasImg()
+            }, 300)  
         }
     })
 
-    setTimeout(() => {
-        _this.canvasImg()
-    }, 200)   
-    Indicator.open({
-        text: '加载中...',
-        spinnerType: 'fading-circle'
-    });
+     
+    
  },
   methods: {
         giveAndroid () {   // 调取安卓 和 ios
@@ -132,14 +136,21 @@ export default {
                 width: width, //dom 原始宽度
                 height: height,
                 dpi: 300,
+                // allowTaint: true,
                 // useCORS: true // 【重要】开启跨域配置
             };
 
             html2canvas(shareContent, opts).then(function (canvas) {
                 
-                var img = canvas.toDataURL("image/png");
-                _this.imgUrl = img
-                cntElem.style['-webkit-transform'] = 'scale(0.5)'
+                var imgs = canvas.toDataURL("image/png");
+                _this.imgUrl = imgs
+                // cntElem.style['-webkit-transform'] = 'scale(0.5)';
+                var img = new Image()
+                img.src = imgs
+                img.style = 'width: 100%;'
+                cntElem.style['display'] = 'none'
+                document.getElementById('imgsss').appendChild(img)
+                _this.isImg = true
                 document.getElementById('canvas_box').style['background'] = '#000';
                 Indicator.close();
             });
@@ -150,12 +161,49 @@ export default {
     }
 }
 </script>
+<style lang='scss'>
+@function rem($px) {
+    @return $px / 58.2 +rem;
+}
+    .mint-indicator-wrapper {
+        height: rem(100);
+        line-height: rem(50);
+        overflow: hidden;
+        .mint-indicator-spin {
+            padding: rem(30);
+            margin-top: rem(-10);
+        }
+    }
+</style>
+
 
 <style lang="scss" scoped>
 
 @function rem($px) {
     @return $px / 58.2 +rem;
 }
+.image {
+        width: 100%;
+        height: 100%;
+        display: -webkit-box; 
+        display: -moz-box; 
+        display: -webkit-flex; 
+        display: -moz-flex; 
+        display: -ms-flexbox; 
+        display: flex;
+        -webkit-align-items:center;
+        box-align:center;
+        -moz-box-align:center;
+        -webkit-box-align:center;
+        align-items:center;
+        -webkit-box-pack: center;
+        /* 12版 */
+        -webkit-justify-content: center;
+        -moz-justify-content: center;
+        -ms-justify-content: center;
+        -o-justify-content: center;
+        justify-content: center;
+    }
 .flex {
     display:-webkit-box;
     display: -moz-box;
@@ -190,7 +238,7 @@ export default {
         height: 100%;
         overflow: hidden;
         font-size: rem(16);
-        padding: rem(20) rem(30);
+        padding: 20px 30px;
         zoom: 1;
         -webkit-transform-origin-x: 0;    /*定义元素被置于x轴的何处*/
         -webkit-transform: scale(1);   /*定义元素被缩放*/
@@ -274,11 +322,12 @@ export default {
         .msg {
             text-align: center;
             font-size: rem(10);
-            line-height: rem(14);
-            padding-bottom: rem(30);
+            line-height: 15px;
+            padding-bottom: 20px;
+            letter-spacing: 3px;
         }
         .check {
-            margin-top: rem(30);
+            margin-top: 30px;
             width: 100%;
             font-size: rem(14);
             overflow: hidden;
@@ -303,6 +352,7 @@ export default {
                     -ms-align-items: center;
                     -o-align-items: center;
                     font-size: rem(14);
+                    padding-bottom: 20px;
                     > img {
                         max-width: rem(40);
                         height: rem(30);

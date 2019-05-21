@@ -58,7 +58,6 @@
 </template>
 
 <script>
-// import { Indicator } from 'mint-ui';
 import html2canvas from 'html2canvas'
 export default {
     data () {
@@ -70,13 +69,10 @@ export default {
             isImg: false
         }
     },
-    created () {
-        // Indicator.open({
-        //     text: '加载中...',
-        //     spinnerType: 'fading-circle'
-        // });
+   
+    mounted () {
         var _this = this;
-        _this.$https.post('/mobile/Doch5/recipe_look', {'id': this.$route.params.did }, function (res) {
+         _this.$https.post('/mobile/Doch5/recipe_look', {'id': this.$route.params.did }, function (res) {
             console.log(res.data)
             if (res.data.code == 1) {
                 _this.canvasdata = res.data.data
@@ -93,14 +89,11 @@ export default {
                 //     }
                     
                 // })
+                setTimeout(function () {
+                    _this.canvasImg()
+                }, 300)  
             }
         })
-    },
-    mounted () {
-        var _this = this;
-        setTimeout(function () {
-            _this.canvasImg()
-        }, 300)  
         
     
     },
@@ -139,7 +132,7 @@ export default {
                 width: width, //dom 原始宽度
                 height: height,
                 dpi: 600,
-                useCORS: true // 【重要】开启跨域配置
+                // useCORS: true // 【重要】开启跨域配置
             };
             html2canvas(shareContent, opts).then(function (canvas) {
                 var urls = canvas.toDataURL('image/png');
@@ -152,7 +145,7 @@ export default {
                 // document.getElementById('imgsss').append(img)
                 // _this.isImg = true
                 document.getElementById('canvas_box').style['background'] = '#000';
-                // Indicator.close();
+                
             });
     
         }
@@ -354,8 +347,8 @@ export default {
                     letter-spacing: rem(1);
                     margin-bottom: 10px;
                     > img {
-                        max-width: rem(40);
-                        height: 25px;
+                        max-width: 50px;
+                        height: 30px;
                         display: block;
                         vertical-align: bottom;
                         margin-left: 10px;
