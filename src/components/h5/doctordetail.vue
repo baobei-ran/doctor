@@ -102,10 +102,10 @@
             
         <dl class="dl" v-show='datalist.flag == 1 || datalist.flag == 3'>
             <dt>
-                审核药师：<span>{{ datalist.flag_name }}</span>
+                <span>审核药师：</span><img :src="$https.baseURL+datalist.yname_pic" alt="">
             </dt>
             <dd>
-                审核时间：<span>{{ datalist.flag_time | filterTime }}</span>
+                <span>审核时间：</span><span>{{ datalist.flag_time | filterTime }}</span>
             </dd>
         </dl>
            
@@ -358,24 +358,32 @@ $color: #333;
             background: #fff;
             padding: rem(20) 0 rem(40);
             dt {
-                border-left: 3px solid #5189F6;
                 display:box;
                 display:-webkit-box;
                 display:-webkit-flex; 
                 display:-moz-box; 
-                display:-ms-flexbox; 
+                display:-ms-flexbox;
                 display:flex;
-                padding-left: rem(23);
+                box-align:center;
+                -webkit-align-items:center;
+                -moz-box-align:center;
+                -webkit-box-align:center;
+                align-items:center;
                 font-size: rem(28);
-                span:first-child {
-                        color: #808080;
-                        display: block;
-                        width: 30%;
+                span {
+                    border-left: 3px solid #5189F6;
+                    padding-left: rem(23);
+                    color: #808080;
+                    display: block;
+                    width: 30%;
                     }
-                    span:last-child {
-                        color: #333;
-                        display: block;
-                    }
+                img {
+                    margin-left: rem(10);
+                    width: 50px;
+                    height: 40px;
+                    display: block;
+                }
+            
             }
             dd {
                 display:box;

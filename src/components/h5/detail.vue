@@ -70,18 +70,18 @@
 
 
             
-        <section class="detail_con" >        
+        <div class="detail_con" >        
             <ul>
                 <li><span  class="blue">开具医生：</span><span>{{ datalist.true_name }}</span></li>
                 <li><span>处方单号：</span><span>{{ datalist.number }}</span></li>
                 <li><span>开具时间：</span><span>{{ datalist.start_time | filterTime }}</span></li>
             </ul>
             <div class="msg">
-                <div><span  class="blue" >患者信息：</span><span>{{ datalist.name }} <b>|</b> <i v-text='datalist.sex ==1? "男" : "女"' ></i> <b>|</b> {{ datalist.age }}</span></div>
+                <div><span  class="blue" >患者信息：</span><span>{{ datalist.name }} <b>|</b> <i v-text='datalist.sex ==1? "男" : datalist.sex == 0 ? "女": ""' ></i> <b>|</b> {{ datalist.age }}</span></div>
                 <div class="left"><span>诊断结果：</span><span>{{ datalist.result }}</span></div>
                 <div class="left"><span>处理意见：</span><span>{{ datalist.opinion }}</span></div>
             </div>
-        </section>
+        </div>
         <div class="recipe">
             <h4>处方中的药品</h4>
             <ul>
@@ -97,9 +97,6 @@
             
         </div>
              
-
-
-
        </div>
        
     </div>

@@ -180,7 +180,18 @@ import { setTimeout } from 'timers';
       
     },
     methods: {
-      isTimer (d) { // 获取当前之前过去的时间
+      ClicksaveComplete: function () { // 和 ios 和 android 交互
+        var u = navigator.userAgent;
+        var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1;
+        var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
+        if (isAndroid) {
+            android.saveComplete()
+        }
+        if (isiOS) {
+            window.webkit.messageHandlers.saveComplete.postMessage(null);
+        }
+      },
+      isTimer: function (d) { // 获取当前之前过去的时间
         var today = new Date();
         var tMonth = today.getMonth();
         var tDate = today.getDate();
@@ -198,7 +209,8 @@ import { setTimeout } from 'timers';
         if (s.length > a) {
             s.length = a
         }
-        this.pastdue = s
+        this.pastdue = s;
+        
       },
       GetList:function(){ // 获取数据
         var that = this;
@@ -206,10 +218,9 @@ import { setTimeout } from 'timers';
         var AllDays = 0;
         this.$http.post("mobile/doch5/get_time", {'did': this.$route.params.did})
           .then(function (res) {
-            // console.log(res.data)
+            console.log(res.data)
             if (res.status >= 200 && res.status < 300) {
               if (res.data.code == 1) {
-              
                 that.ResData = res.data;
                 that.Address=res.data.data.address;
                 // AllDays = res.data.alldays;
@@ -220,12 +231,11 @@ import { setTimeout } from 'timers';
                     SelectDate.push(setDate(new Date(), n))
                     arr.push(setDate(new Date(), n))
                     // SelectDate.push(GetDateTime(n))
-                    
                   })(i)
                 }
-                that.Time = SelectDate;
+                that.Time = SelectDate    
                 setTimeout(function () {
-                  that.isTimer(arr)
+                  that.isTimer(arr)  
                 }, 100)
               } else  {
 
@@ -238,9 +248,10 @@ import { setTimeout } from 'timers';
       },
       //提交表单
       SubBtn: function () {
+        var that=this;
         var isNum = /^[0-9]+\.?[0-9]*$/;
         var isPrice = /(^[1-9]([0-9]+)?(\.[0-9]{1,2})?$)|(^(0){1}$)|(^[0-9]\.[0-9]([0-9])?$)/;
-        var that=this;
+        that.RequestData = []
         $.each($("#App td.active"), function (i, v) {
           var $this = $(v);
           var dataObj = {};
@@ -250,6 +261,8 @@ import { setTimeout } from 'timers';
           dataObj.time_type = dataType;
           that.RequestData.push(dataObj);
         });
+        
+        console.log(that.RequestData)
         var obj = {
           did: this.$route.params.did,
           type: this.Type,
@@ -293,7 +306,8 @@ import { setTimeout } from 'timers';
           return false
         } else {
           
-         MessageBox.confirm('提交后将自动通知您的患者', {title:'是否确认保存设定？'}).then(action => {
+         MessageBox.confirm('保存后患者可在你的主页上预约门诊<br/>是否确认保存设定？', {title:'服务提示'}).then(action => {
+           console.log(obj)
             this.$http.post("mobile/doch5/set_time", obj)
               .then(function (res) {
                 if (res.status >= 200 && res.status < 300) {
@@ -314,6 +328,7 @@ import { setTimeout } from 'timers';
                             $this.removeClass("active");
                         }
                       });
+                      that.ClicksaveComplete();
                     }, 2000)
                   } else {
                     Toast({
@@ -327,7 +342,7 @@ import { setTimeout } from 'timers';
                 console.log(err)
               })
             }).catch(cancel => {
-              
+
             });
         }
       },
@@ -453,7 +468,9 @@ import { setTimeout } from 'timers';
       color: #202020;
       background-color: #fff;
       .select_box {
+        overflow-x:scroll;
         overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
         table {
           border-top: 1px solid #ebebeb;
           width: 100%;
