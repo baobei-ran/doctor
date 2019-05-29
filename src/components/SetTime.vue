@@ -117,7 +117,7 @@ import { setTimeout } from 'timers';
     data() {
       return {
         TipsMsg: '提示：可多选批量设定，每周日开启下一时间段预约',
-        Time: null,
+        Time: [],
         TimeInterval: ['上午', '下午', '晚上'],
         Type: 1,//门诊类型 1：普通 2：专家
         Address: '',//门诊地点
@@ -127,7 +127,8 @@ import { setTimeout } from 'timers';
         ResData: null,//请求接口返回的数据
         Number: 1,//状态切换数字
         pastdue: null, // 盛放过去的时间
-        RequestData:[] // 盛放点击预约的时间
+        RequestData:[], // 盛放点击预约的时间
+        Time_all: []    // 临时存放
       }
     },
     mounted: function () {
@@ -224,15 +225,19 @@ import { setTimeout } from 'timers';
                 that.ResData = res.data;
                 that.Address=res.data.data.address;
                 // AllDays = res.data.alldays;
-                AllDays = 15;
+                
                 //获取日期
-                for (var i = 1; i < AllDays; i++) {
+                AllDays = 15;
+                var num = (new Date()).getDay() + 1;
+                for (var i = num; i < AllDays; i++) {
                   (function (n) {
                     SelectDate.push(setDate(new Date(), n))
                     arr.push(setDate(new Date(), n))
                     // SelectDate.push(GetDateTime(n))
                   })(i)
                 }
+               
+                console.log(SelectDate)
                 that.Time = SelectDate    
                 setTimeout(function () {
                   that.isTimer(arr)  
@@ -390,7 +395,7 @@ import { setTimeout } from 'timers';
 
 
 
-// 现在获取两周时间
+// 现在获取两周时间排列
   var formatDate = function(date) {    
         var year = date.getFullYear() 
         var month = DoHandleMonth(date.getMonth()+1);
@@ -404,16 +409,14 @@ import { setTimeout } from 'timers';
             week: week,
         }
       };
-
     var addDate= function(date,n){    
-        date.setDate(date.getDate()+n);    
-        return date;
-      };
-      var setDate = function(date, n){       
-        var week = date.getDay()-1;
-        date = addDate(date,week*-1);
-        
-        for(var i = 0;i<n;i++){         
+      date.setDate(date.getDate()+n);    
+      return date;
+    };
+    var setDate = function(date, n){       
+      var week = date.getDay()-1;
+      date = addDate(date,week*-1);
+        for(var i = 0;i<n;i++) {         
           //  var timer = formatDate(i==0 ? date : addDate(date,1));    // 星期一开始
            var timer = formatDate(i==0 ? addDate(date,-1) : addDate(date,1));//星期日开始
         } 
