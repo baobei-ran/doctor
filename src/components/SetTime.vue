@@ -87,8 +87,8 @@
       <div class="my_group">
         <p class="group_title">挂号费用</p>
         <input
-          type="number"
-          placeholder="输入单次挂号价格（元）"
+          type="number" id='money'
+          placeholder="请设置门诊费用"
           v-model="Money"
         >
       </div>
@@ -96,8 +96,8 @@
         <p class="group_title">预约人数</p>
         <input
           type="number"
-          placeholder="输入可预约人数（人）"
-          v-model="PeopleCount"
+          placeholder="请输入可预约人数（人）" id='num_rem'
+          v-model="PeopleCount" @keyup="ren_num"
         >
       </div>
     </div>
@@ -109,9 +109,7 @@
 </template>
 
 <script>
-import {Toast, Indicator,  MessageBox} from 'mint-ui';
-import { setTimeout } from 'timers';
-// import { constants } from 'fs';
+import { Toast, Indicator,  MessageBox} from 'mint-ui';
   export default {
     name: "SetTime",
     data() {
@@ -133,6 +131,21 @@ import { setTimeout } from 'timers';
     },
     mounted: function () {
       this.GetList();
+      var _this = this;
+      $("#money").blur(function () {
+         _this.Money =  _this.Money.replace(/^\d$/g, '$1');
+      })
+      $("#money").on("input propertychange",function(event) {     // 输入的时候进行验证
+          // this.value = this.value.replace(/^([1-9]\d*(\.[\d]{0,2})?|0(\.[\d.]{0,2})?)[\d]*/g, '$1');
+          this.value = this.value.replace(/[^\d\.]/g, '');
+          var money2 = _this.Money.match(/^\d*(\.?\d{0,2})/g)[0]; // 保留小数点后面两位小数
+          _this.Money = money2;
+          this.value = this.value.replace(".","$#$").replace(/\./g,"").replace("$#$","");
+          // this.value = this.value.replace(/\.{1,}/g,"$2$3");
+      })
+      $("#num_rem").on("input propertychange",function(event) {     // 输入的时候进行验证
+          this.value = this.value.replace(/[^\.]/g, '');
+      })
     },
     updated: function () {
       var that = this;
@@ -181,6 +194,16 @@ import { setTimeout } from 'timers';
       
     },
     methods: {
+      ren_num() {
+        var n = new RegExp("^[0-9]*[1-9][0-9]*$");
+        if(!n.test(this.PeopleCount)) {
+          this.PeopleCount = ' '
+        } else {
+          this.PeopleCount = parseInt(this.PeopleCount);
+        }
+        
+      },
+     
       ClicksaveComplete: function () { // 和 ios 和 android 交互
         var u = navigator.userAgent;
         var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1;
@@ -228,7 +251,7 @@ import { setTimeout } from 'timers';
                 
                 //获取日期
                 AllDays = 15;
-                var num = (new Date()).getDay() + 1;
+                var num = (new Date().getDay()) + 1;
                 for (var i = num; i < AllDays; i++) {
                   (function (n) {
                     SelectDate.push(setDate(new Date(), n))
@@ -237,10 +260,10 @@ import { setTimeout } from 'timers';
                   })(i)
                 }
                
-                console.log(SelectDate)
                 that.Time = SelectDate    
-                setTimeout(function () {
+                var t = setTimeout(function () {
                   that.isTimer(arr)  
+                  clearTimeout(t)
                 }, 100)
               } else  {
 
@@ -254,8 +277,9 @@ import { setTimeout } from 'timers';
       //提交表单
       SubBtn: function () {
         var that=this;
-        var isNum = /^[0-9]+\.?[0-9]*$/;
+        var isNum = /^(0|[1-9][0-9]*|-[1-9][0-9]*)$/;
         var isPrice = /(^[1-9]([0-9]+)?(\.[0-9]{1,2})?$)|(^(0){1}$)|(^[0-9]\.[0-9]([0-9])?$)/;
+        var n = new RegExp("^[0-9]*[1-9][0-9]*$");
         that.RequestData = []
         $.each($("#App td.active"), function (i, v) {
           var $this = $(v);
@@ -266,52 +290,43 @@ import { setTimeout } from 'timers';
           dataObj.time_type = dataType;
           that.RequestData.push(dataObj);
         });
-        
-        console.log(that.RequestData)
         var obj = {
           did: this.$route.params.did,
           type: this.Type,
-          money: Number(this.Money).toFixed(2),
+          money: this.Money,
           num: this.PeopleCount,
           data: this.RequestData,
         }
         if (this.RequestData.length == 0) {
           Toast({
-            message: '请选择时间段！',
+            message: '请选择时段！',
             position: 'middle',
             duration: 2000
           });
           return false
-        } else if (this.Money <= 0 && !isPrice.test(this.Money)) {
+        }  else if (this.Money == '') {
           Toast({
-            message: '请输入正确挂号费用！',
+            message: '请设置门诊费用！',
+            position: 'middle',
+            duration: 2000
+          });
+        } else if (!isPrice.test(this.Money)) {
+          Toast({
+            message: '请输入整数或者保留两位小数',
             position: 'middle',
             duration: 2000
           });
           return false
-        } else if (this.Money == '') {
+        } else if (!n.test(this.PeopleCount)) {
           Toast({
-            message: '请输入挂号费用！',
-            position: 'middle',
-            duration: 2000
-          });
-        } else if (this.PeopleCount == '' && !isNum.test(this.PeopleCount) ) {
-          Toast({
-            message: '请输入正确预约人数！',
-            position: 'middle',
-            duration: 2000
-          });
-          return false
-        } else if (this.PeopleCount < 1) {
-          Toast({
-            message: '请输入正确预约人数！',
+            message: '请设定可预约人数！',
             position: 'middle',
             duration: 2000
           });
           return false
         } else {
           
-         MessageBox.confirm('保存后患者可在你的主页上预约门诊<br/>是否确认保存设定？', {title:'服务提示'}).then(action => {
+         MessageBox.confirm('<p style="color:#333;">保存后患者可在你的主页上预约门诊<br/>是否确认保存设定？</p>', {title:'服务提示'}).then(action => {
            console.log(obj)
             this.$http.post("mobile/doch5/set_time", obj)
               .then(function (res) {
@@ -409,11 +424,11 @@ import { setTimeout } from 'timers';
             week: week,
         }
       };
-    var addDate= function(date,n){    
+    var addDate= function(date,n) {    
       date.setDate(date.getDate()+n);    
       return date;
     };
-    var setDate = function(date, n){       
+    var setDate = function(date, n) {       
       var week = date.getDay()-1;
       date = addDate(date,week*-1);
         for(var i = 0;i<n;i++) {         
