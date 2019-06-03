@@ -132,15 +132,19 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
     mounted: function () {
       this.GetList();
       var _this = this;
-      $("#money").blur(function () {
-         _this.Money =  _this.Money.replace(/^\d$/g, '$1');
-      })
+      // $("#money").blur(function () {
+      //    _this.Money =  _this.Money.replace(/^\d$/g, '');
+      // })
       $("#money").on("input propertychange",function(event) {     // 输入的时候进行验证
           // this.value = this.value.replace(/^([1-9]\d*(\.[\d]{0,2})?|0(\.[\d.]{0,2})?)[\d]*/g, '$1');
           this.value = this.value.replace(/[^\d\.]/g, '');
+           var m = /(^[1-9]([0-9]+)?(\.[0-9]{1,2})?$)|(^(0){1}$)|(^[0-9]\.[0-9]([0-9])?$)/;
           var money2 = _this.Money.match(/^\d*(\.?\d{0,2})/g)[0]; // 保留小数点后面两位小数
           _this.Money = money2;
-          this.value = this.value.replace(".","$#$").replace(/\./g,"").replace("$#$","");
+          if (m.test(this.value)) {
+              _this.Money = this.value
+          }
+          // this.value = this.value.replace(".","$#$").replace(/\./g,"").replace("$#$","");
           // this.value = this.value.replace(/\.{1,}/g,"$2$3");
       })
       $("#num_rem").on("input propertychange",function(event) {     // 输入的时候进行验证
@@ -197,10 +201,8 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
       ren_num() {
         var n = new RegExp("^[0-9]*[1-9][0-9]*$");
         if(!n.test(this.PeopleCount)) {
-          this.PeopleCount = ' '
-        } else {
-          this.PeopleCount = parseInt(this.PeopleCount);
-        }
+          this.PeopleCount = ''
+        } 
         
       },
      
