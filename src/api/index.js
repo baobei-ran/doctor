@@ -2,15 +2,15 @@ import axios from 'axios';
 // var baseURL = 'http://test99.yunyikang.cn'; 
 var baseURL = 'https://www.yunyikang.cn'; // 正式
 
-let http = axios.create({
+var http = axios.create({
   baseURL: baseURL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
   },
   transformRequest: [function (data) {
-    let newData = '';
-    for (let k in data) {
+    var newData = '';
+    for (var k in data) {
       if (data.hasOwnProperty(k) === true) {
         newData += encodeURIComponent(k) + '=' + encodeURIComponent(data[k]) + '&';
       }
