@@ -1,9 +1,10 @@
 <!--SetTime 时段设置-->
 <template>
   <div id="SetTime">
-    <div class="tips_msg"
-         v-html="TipsMsg"
-    ></div>
+    <div class="tips_msg" >
+      <p v-html="TipsMsg"></p>
+      <p v-if='start_Time'>您已发布<span>{{ start_Time }}-{{ end_Time }}</span>的停诊通知，停诊期间内将不能设定预约时段</p>
+    </div>
     <div class="select_table">
       <div class="select_box">
         <table border="0" cellpadding="0" cellspacing="0">
@@ -95,15 +96,18 @@
       <div class="my_group">
         <p class="group_title">预约人数</p>
         <input
-          type="number"
+          type="text"
           placeholder="请输入可预约人数（人）" id='num_rem'
-          v-model="PeopleCount" @keyup="ren_num"
+          v-model="PeopleCount" 
+          v-enter-number
         >
       </div>
     </div>
-    <div class="sub_btn"
-         @click="SubBtn"
-    >保存设置
+    <div class="sub_btn_box">
+        <div class="sub_btn"
+          @click="SubBtn"
+      >保存设置
+      </div>
     </div>
   </div>
 </template>
@@ -126,7 +130,9 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
         Number: 1,//状态切换数字
         pastdue: null, // 盛放过去的时间
         RequestData:[], // 盛放点击预约的时间
-        Time_all: []    // 临时存放
+        Time_all: [],    // 临时存放
+        start_Time: '',
+        end_Time: ''
       }
     },
     mounted: function () {
@@ -148,7 +154,11 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
           // this.value = this.value.replace(/\.{1,}/g,"$2$3");
       })
       $("#num_rem").on("input propertychange",function(event) {     // 输入的时候进行验证
-          this.value = this.value.replace(/[^\.]/g, '');
+          // this.value = this.value.replace(/[^\.]/g, '');
+          var reg = /^[1-9]\d*$/;
+          if(_this.PeopleCount == 0 || new RegExp(reg).test(_this.PeopleCount) == false) {
+            _this.PeopleCount = ''
+          }
       })
     },
     updated: function () {
@@ -198,14 +208,7 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
       
     },
     methods: {
-      ren_num() {
-        var n = new RegExp("^[0-9]*[1-9][0-9]*$");
-        if(!n.test(this.PeopleCount)) {
-          this.PeopleCount = ''
-        } 
-        
-      },
-     
+      
       ClicksaveComplete: function () { // 和 ios 和 android 交互
         var u = navigator.userAgent;
         var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1;
@@ -250,7 +253,22 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
                 that.ResData = res.data;
                 that.Address=res.data.data.address;
                 // AllDays = res.data.alldays;
-                
+            if (res.data.clost_time) {  // 医生停诊时间
+                var today = new Date((res.data.clost_time.start_time)*1000);
+                var tMonth = DoHandleMonth(today.getMonth() + 1);
+                var tDate = DoHandleMonth(today.getDate());
+                // console.log(tMonth+'.'+tDate)
+                var starts = tMonth+'.'+tDate
+                var today_end = new Date((res.data.clost_time.end_time)*1000);
+                var tMonth1 = DoHandleMonth(today_end.getMonth() + 1);
+                var tDate1 = DoHandleMonth(today_end.getDate());
+                var ends = tMonth1+'.'+tDate1
+                that.start_Time = starts
+                that.end_Time = ends
+                // console.log(tMonth1+'.'+tDate1)
+                // console.log(i)
+               
+            }
                 //获取日期
                 AllDays = 15;
                 var num = (new Date().getDay()) + 1;
@@ -370,6 +388,16 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
       },
       //点击获取数据
       SetActive: function (event, i) {
+       if(this.start_Time) {
+          if(i >= this.start_Time && i <= this.end_Time) {
+              this.$toast({
+                  message: '您已设置停诊服务',
+                  position: 'middle',
+                  duration: 2000
+              });
+              return;
+          }
+       }
         var flag = true
         this.pastdue.map(function (val) {
           if (i == val.date) {
@@ -472,13 +500,14 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
     height: 100%;
     //警示语
     .tips_msg {
-      height: .72rem;
       background: rgba(255, 246, 218, 1);
-      line-height: .72rem;
-      padding: 0 .3rem;
+      padding: .2rem .3rem;
       font-size: .24rem;
       font-weight: 400;
       color: rgba(225, 166, 40, 1);
+      p {
+        line-height: .37rem;
+      }
     }
     //选择表格
     .select_table {
@@ -487,6 +516,7 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
       font-size: .22rem;
       color: #202020;
       background-color: #fff;
+      position: relative;
       .select_box {
         overflow-x:scroll;
         overflow-y: hidden;
@@ -588,6 +618,8 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
         }
       }
     }
+
+    
     //提交按钮
     .sub_btn {
       width: 4.12rem;
@@ -599,7 +631,9 @@ import { Toast, Indicator,  MessageBox} from 'mint-ui';
       -moz-border-radius: .8rem;
       border-radius: .8rem;
       margin: 0 auto;
-      margin-top: 2.5rem;
+      margin-top: 1.2rem;
+      display: -webkit-box;
+      display: -webkit-flex;
       display: flex;
       justify-content: center;
       align-items: center;
