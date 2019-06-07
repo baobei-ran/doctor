@@ -9,13 +9,16 @@ var http = axios.create({
     'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
   },
   transformRequest: [function (data) {
-    var newData = '';
+    if (typeof data === 'object') {
+      var newData = '';
     for (var k in data) {
       if (data.hasOwnProperty(k) === true) {
         newData += encodeURIComponent(k) + '=' + encodeURIComponent(data[k]) + '&';
       }
     }
     return newData;
+    }
+    return data;
   }]
 });
 
